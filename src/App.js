@@ -3,7 +3,7 @@ import url from 'url';
 import fetch from 'node-fetch';
 import config from '../config.json';
 
-class CircleCI {
+export class CircleCI {
   constructor(token) {
     this.apiBaseUrl = 'https://circleci.com/api/v1/';
     this.token = token;
@@ -23,11 +23,26 @@ class CircleCI {
       }).catch(reject);
     });
   }
+
+  getBranchBuilds() {
+    const REQUEST_URL = `${this.apiBaseUrl}project/${config.user}/${config.repoName}/tree/${config.branch}?circle-token=${this.token}`;
+    return new Promise((resolve, reject) => {
+      fetch(REQUEST_URL, {
+        'headers': {
+          'Accept': 'application/json',
+        },
+      }).then((res) => {
+        return res.json();
+      }).then((data) => {
+        resolve(data[0].build_num);
+      }).catch(reject);
+    });
+  }
 }
 
 export default class App {
   constructor() {
-    this.port = 8080;
+    this.port = config.port;
     this.server = http.createServer(this.onRequest.bind(this));
     this.server.on('connect', this.onConnect.bind(this));
     this.server.on('close', this.onClose.bind(this));

@@ -6,24 +6,20 @@
   "main": "index.js",
   "scripts": {
     "test": "ava",
-    "watch": "./node_modules/.bin/babel src --watch --out-dir lib",
-    "compile": "./node_modules/.bin/babel src --out-dir lib",
+    "watch": "./node_modules/.bin/babel --presets=es2015 src --watch --out-dir lib",
+    "compile": "./node_modules/.bin/babel --presets=es2015 src --out-dir lib",
     "prepublish": "npm run compile"
   },
   "author": "Ryo Narita",
   "license": "MIT",
   "dependencies": {
     "http": "0.0.0",
-    "node-fetch": "^1.3.3"
-  },
-  "devDependencies": {
+    "node-fetch": "^1.3.3",
     "babel": "^6.0.15",
     "babel-cli": "^6.1.2",
     "babel-preset-es2015": "^6.1.2"
   },
-  "babel": {
-    "presets": [
-      "es2015"
-    ]
+  "devDependencies": {
+    "ava": "^0.4.2"
   }
 }

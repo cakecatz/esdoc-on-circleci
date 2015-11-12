@@ -1,5 +1,7 @@
 {
   "user": "",
   "repoName": "",
-  "container": 0
+  "container": 0,
+  "port": 8888,
+  "branch": "master"
 }
