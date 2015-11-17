@@ -59,51 +59,46 @@ export default class App {
       if (!this.memory[params.query.token]) {
         this.memory[params.query.token] = new CircleCI(params.query.token);
       }
-
-      switch (params.pathname) {
-      case '/index':
-        this.index(this.memory[params.query.token], response);
-        break;
-      case '/badge':
-        this.badge(this.memory[params.query.token], response, params.query.token);
-        break;
-      default:
-      }
+      this.access(params, this.memory[params.query.token], response);
     } else {
       response.writeHead(404);
       response.end();
     }
   }
 
-  index(circleci, response) {
-    circleci.getRecentBranch().then((recentBuildNum) => {
-      response.writeHead(302, {
-        'Location': this.getEsdocUrl(recentBuildNum),
-      });
-      response.end();
-    });
-  }
+  access(params, circleci, response) {
+    let redirected = false;
+    circleci.getBranchBuilds().then((recentBuildNum) => {
+      const fetchUrl = `${this.getArtifactsPath(params.pathname, recentBuildNum)}?circle-token=${params.query.token}`;
+      fetch(fetchUrl).then((res) => {
+        if (!res.ok) {
+          response.writeHead(404);
+          response.end();
+          return false;
+        }
 
-  badge(circleci, response, token) {
-    circleci.getRecentBranch().then((recentBuildNum) => {
-      fetch(`${this.getEsdocBadgeUrl(recentBuildNum)}?circle-token=${token}`).then((res) => {
+        const contentType = res.headers.get('content-type');
+        if (contentType.indexOf('image') >= 0) {
+          response.setHeader('Content-Type', contentType);
+        } else {
+          response.writeHead(302, {
+            'Location': fetchUrl,
+          });
+          response.end();
+          redirected = true;
+        }
         return res.text();
       }).then((body) => {
-        response.setHeader('Content-Type', 'image/svg+xml');
-        response.write(body);
-        response.end();
+        if (!redirected && body) {
+          response.write(body);
+          response.end();
+        }
       });
     });
   }
 
-  getEsdocUrl(buildNum) {
-    return `https://circle-artifacts.com/gh/${config.user}/${config.repoName}/` +
-      `${buildNum}/artifacts/${config.container}/home/ubuntu/${config.repoName}/esdoc/index.html`;
-  }
-
-  getEsdocBadgeUrl(buildNum) {
-    return `https://circle-artifacts.com/gh/${config.user}/${config.repoName}/` +
-      `${buildNum}/artifacts/${config.container}/home/ubuntu/${config.repoName}/esdoc/badge.svg`;
+  getArtifactsPath(pathname, buildNum) {
+    return `https://circle-artifacts.com/gh/${config.user}/${config.repoName}/${buildNum}/artifacts/${config.container}${pathname}`;
   }
 
   onConnect() {
